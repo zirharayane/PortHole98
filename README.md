@@ -10,12 +10,22 @@
 ![UI](https://img.shields.io/badge/UI-Windows%2095%2F98-008080)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
+### Download
+
+[![Download PortHole 98](https://img.shields.io/badge/Download-PortHole98--Setup.exe-008080?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/zirharayane/PortHole98/releases)
+
 **Made by Rayane Zirha · RZ™**
 
 <!-- Replace with a real screenshot or a short GIF of the app -->
 <img src="docs/screenshot.png" alt="PortHole 98 screenshot" width="720">
 
 </div>
+
+---
+
+## Install
+
+Download `PortHole98-Setup.exe` from [Releases](https://github.com/zirharayane/PortHole98/releases), run it, follow the wizard. No Python required.
 
 ---
 
@@ -71,14 +81,21 @@ uvicorn app.main:app --reload
 # open http://127.0.0.1:8000
 ```
 
-**Build a standalone .exe**
+**Build the installer yourself**
 
-```bash
-build\build_exe.bat
-# result: dist\PortHole98.exe
-```
+1. Install Python dependencies:
+   ```bash
+   pip install -r requirements.txt
+   pip install pyinstaller
+   ```
+2. Install [Inno Setup 6](https://jrsoftware.org/isdl.php) (free).
+3. Run the installer build script:
+   ```bash
+   build\build_installer.bat
+   ```
+4. Find the installer at `dist\PortHole98-Setup.exe`.
 
-> Windows SmartScreen or antivirus may warn about the .exe because it is unsigned and built with PyInstaller. That is a common false alarm for network tools. The full source is in this repo.
+> Windows SmartScreen or antivirus may warn about the installer or executable because it is unsigned and built with PyInstaller. That is a common false alarm for network tools. The full source is in this repo.
 
 ---
 

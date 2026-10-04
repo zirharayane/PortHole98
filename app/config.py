@@ -6,16 +6,23 @@ from pathlib import Path
 from dataclasses import dataclass
 
 
+def resource_path(relative_path: str | Path = "") -> Path:
+    """Resolve absolute path to a resource, supporting PyInstaller sys._MEIPASS."""
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        base = Path(sys._MEIPASS)  # type: ignore[attr-defined]
+    else:
+        base = Path(__file__).resolve().parent.parent
+    return (base / relative_path).resolve()
+
+
 def get_base_dir() -> Path:
     """Return project root directory, supporting PyInstaller bundles."""
-    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS)  # type: ignore[attr-defined]
-    return Path(__file__).resolve().parent.parent
+    return resource_path()
 
 
-def get_resource_path(relative_path: str = "") -> Path:
+def get_resource_path(relative_path: str | Path = "") -> Path:
     """Resolve absolute path to a resource or directory."""
-    return (get_base_dir() / relative_path).resolve()
+    return resource_path(relative_path)
 
 
 @dataclass(frozen=True)
