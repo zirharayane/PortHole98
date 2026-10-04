@@ -1,281 +1,157 @@
-# PortHole 98
+<div align="center">
 
-**Made by Rayane Zirha  RZ™**
+# 🕳️ PortHole 98
 
-> **PortHole 98** is a classic Windows 95/98 styled network diagnostic dashboard built with **Python 3.11+**, **FastAPI**, and a zero-dependency retro HTML5/CSS3/JavaScript frontend. It identifies open ports on your local network, checks whether your public IP is reachable from the internet, and measures TCP connect latency from nodes across 5 continents.
+### Is your port *really* open to the world? Find out from 5 continents, in a Windows 98 window.
 
-![PortHole 98 Dashboard](docs/screenshot.png)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-async-009688?logo=fastapi&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows-0078D6?logo=windows&logoColor=white)
+![UI](https://img.shields.io/badge/UI-Windows%2095%2F98-008080)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+**Made by Rayane Zirha · RZ™**
+
+<!-- Replace with a real screenshot or a short GIF of the app -->
+<img src="docs/screenshot.png" alt="PortHole 98 screenshot" width="720">
+
+</div>
+
+---
+
+## Why PortHole 98?
+
+You set up a port forward. Your friends still can't connect. Is it your firewall? Your router? Your ISP? Or are you stuck behind **CGNAT** and no setting will ever work?
+
+PortHole 98 answers that in one window:
+
+- 🔎 **Scans your local network** and shows every device and its open ports.
+- 🌍 **Tests your public IP from 5 continents** and reports the TCP connect time per location.
+- 🧱 **Detects CGNAT** by comparing your router's WAN IP with your public IP, so you know if public checks can *ever* succeed.
+- 📡 **Checks IPv6** availability, because on some lines it's the way around CGNAT.
+- 🖥️ **Looks like it's 1998.** Bevelled buttons, navy title bar, message boxes and all. Zero images, zero frameworks.
+
+It started as a real problem: friends lagging out of a home-hosted Minecraft server. The tool I wished existed became this project.
 
 ---
 
 ## Features
 
-- **Branding**:
-  - Designed and developed with pride: **Made by Rayane Zirha  RZ™**.
-- **Public IP & CGNAT Detection**:
-  - Automatically discovers public IPv4 and IPv6 via `api.ipify.org` and `api64.ipify.org`.
-  - Queries router WAN IP via UPnP IGD (`miniupnpc`), with manual WAN IP entry fallback.
-  - Accurately classifies Carrier-Grade NAT (CGNAT) by analyzing IP parity, RFC 6598 (`100.64.0.0/10`), and RFC 1918 private address ranges (shows grey "UNKNOWN" when router WAN IP is unknown).
-- **Two-Stage Local Subnet Scanner**:
-  - **Stage 1 (Host Discovery)**: Probes `/24` subnets (capped at /24 for safety) to rapidly detect responsive live hosts.
-  - **Stage 2 (Port Scanning)**: Scans open ports only on live hosts using an asynchronous TCP connect scanner with `asyncio.Semaphore(200)` and a `0.5s` connection timeout.
-  - Reverse DNS hostname lookups and automatic service name guessing via `socket.getservbyport` with fallback dictionary (including Minecraft `25565`, `8080`, `8443`, etc.).
-- **Global Multi-Continent Reachability & Latency (check-host.net)**:
-  - Measures TCP connect latency to your public port from 5 geographic regions: **Europe**, **North America**, **Asia**, **South America**, and **Oceania**.
-  - Defensive parsing for all payload formats (success, timeouts, connection refused, pending nulls, and unknown shapes).
-  - Multi-run iterations (1–5 runs, default 3) with median, min, max, and failed run statistics.
-  - In-memory 45-second cache to prevent excessive queries and respect external rate limits.
-- **Authentic Windows 95/98 Retro UI**:
-  - Edge-to-edge window layout filling the application window seamlessly, 3D beveled styling, navy-to-blue title bar gradient, sunken inputs and list views, MS Sans Serif & Courier New typography.
-  - Frameless native desktop integration with native title bar dragging, double-click maximize/restore, minimize, and close controls.
-  - Menu bar with dropdown menus (File, Help), tabbed navigation, column-header sorting, segmented blue-block progress bars, and classic modal dialogs.
-  - **Zero external dependencies**: No UI frameworks, no CDNs, no external image files (pure CSS/SVG pixel artwork).
-- **Dual Runtime Modes**:
-  - Standard web server mode (`uvicorn app.main:app --reload`).
-  - Native standalone desktop application mode (`python desktop.py` with `pywebview`).
+| | |
+|---|---|
+| **Network tab** | Public IPv4/IPv6, router WAN IP (UPnP, or enter it manually), CGNAT verdict with an explanation |
+| **Local Scan tab** | Async TCP scanner for your own subnet, hostname lookup, service names, common or top-1024 port profiles |
+| **Public Check tab** | Latency from 5 regions via [check-host.net](https://check-host.net), repeated runs, median / min / max / failed counts, sortable table |
+| **Desktop app** | Runs in its own native window and packages into a single `PortHole98.exe` |
+| **Web mode** | Same app in your browser for development |
+| **Safety built in** | Private-range scans only, public checks only ever test *your own* IP, rate limits, nothing saved to disk |
 
 ---
 
-## Project Structure
+## Quick start
 
-```text
-PortHole/
-├── app/
-│   ├── __init__.py
-│   ├── config.py                # Configuration and resource path helpers
-│   ├── main.py                  # FastAPI application & route registration
-│   ├── models.py                # Pydantic v2 data models
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── checkhost.py         # check-host.net integration, parsing, caching
-│   │   ├── local_scan.py        # Two-stage async TCP connect subnet scanner
-│   │   ├── network_info.py      # ipify discovery, UPnP, and CGNAT logic
-│   │   └── safety.py            # Rate limiting, subnet caps, target validators
-│   └── utils/
-│       ├── __init__.py
-│       └── stats.py             # Defensive median, min, max, failed statistics
-├── build/
-│   ├── build_exe.bat            # PyInstaller Windows build script
-│   └── icon.ico                 # Retro application icon
-├── web/
-│   ├── index.html               # Classic Windows 95/98 HTML structure
-│   ├── style.css                # 3D bevels, classic palette, retro styling
-│   └── app.js                   # Client interactivity, drag-drop, API polling
-├── tests/
-│   ├── test_api.py              # Endpoint integration tests
-│   ├── test_cgnat.py            # CGNAT classification unit tests
-│   ├── test_checkhost.py        # Defensive parsing and latency statistics tests
-│   └── test_safety.py           # Subnet boundaries and rate limiter tests
-├── desktop.py                   # PyWebview native desktop launcher
-├── requirements.txt             # Python dependencies
-├── .env.example                 # Environment defaults
-├── pytest.ini                   # Pytest test configuration
-├── PLAN.md                      # Milestone implementation plan
-└── README.md                    # Project documentation
-```
-
----
-
-## Installation & Requirements
-
-### Prerequisites
-- **Python 3.11+** (Python 3.11, 3.12, 3.13, 3.14 supported).
-- Windows 10/11 or modern Linux/macOS.
-
-### Setup
-1. Clone or navigate to the project directory:
-   ```bash
-   cd PortHole
-   ```
-2. (Recommended) Create and activate a virtual environment:
-   ```bash
-   python -m venv .venv
-   # Windows:
-   .venv\Scripts\activate
-   # Linux/macOS:
-   source .venv/bin/activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Copy the environment configuration template:
-   ```bash
-   cp .env.example .env
-   ```
-
----
-
-## How to Run
-
-### Mode 1: Development Server (Web Browser)
-Run the FastAPI development server with auto-reload:
 ```bash
-uvicorn app.main:app --reload
-```
-Open your browser and navigate to:
-```text
-http://127.0.0.1:8000/
+git clone https://github.com/<your-username>/porthole98.git
+cd porthole98
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+pip install -r requirements.txt
 ```
 
-### Mode 2: Native Desktop Application
-Run the standalone desktop window using `pywebview`:
+**Run it as a desktop app**
+
 ```bash
 python desktop.py
 ```
-*Note: On Windows, `pywebview` utilizes Microsoft Edge WebView2 (pre-installed on Windows 10/11). If WebView2 is absent, an informational dialog directs you to the official Microsoft installer.*
 
----
+**Run it in the browser (development)**
 
-## API Endpoints
-
-### 1. Network Discovery
-`GET /api/network`
-- **Query Parameters**:
-  - `wan_ip` (optional, string): Manually entered router WAN IP to evaluate CGNAT when UPnP IGD is unavailable.
-- **Response**:
-  ```json
-  {
-    "public_ipv4": "102.97.50.160",
-    "public_ipv6": null,
-    "router_wan_ip": "102.97.50.160",
-    "local_subnet": "192.168.1.0/24",
-    "cgnat": false,
-    "reason": "Router WAN IP matches public IPv4 (102.97.50.160). No CGNAT detected."
-  }
-  ```
-
-### 2. Check-Host Active Nodes
-`GET /api/nodes`
-- **Response**: List of 5 regional nodes in use across Europe, North America, Asia, South America, and Oceania.
-  ```json
-  [
-    { "id": "de1.node.check-host.net", "name": "Germany (Frankfurt)", "country": "Germany", "region": "Europe" },
-    { "id": "ca1.node.check-host.net", "name": "Canada (Vancouver)", "country": "Canada", "region": "North America" },
-    { "id": "hk1.node.check-host.net", "name": "Hong Kong (Hong Kong)", "country": "Hong Kong", "region": "Asia" },
-    { "id": "br1.node.check-host.net", "name": "Brazil (Sao Paulo)", "country": "Brazil", "region": "South America" },
-    { "id": "au1.node.check-host.net", "name": "Australia (Sydney)", "country": "Australia", "region": "Oceania" }
-  ]
-  ```
-
-### 3. Local Subnet Scan
-`POST /api/scan/local`
-- **Request Body**:
-  ```json
-  {
-    "subnet": "192.168.1.0/24",
-    "ports": "common"
-  }
-  ```
-  *(Supported port profiles: `"common"` [21 common ports including 25565] or `"top1024"` [ports 1–1024]).*
-- **Safety Restriction**: Strictly limited to private RFC 1918 subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`) and capped at `/24`. Public subnets and subnets larger than `/24` return HTTP 400.
-- **Rate Limit**: 5 triggers per minute per client IP.
-- **Response**: `{ "job_id": "47c7c52f982e47b8b9925d2664b8ac15" }`
-
-`GET /api/scan/local/{job_id}`
-- **Poll Status**: Returns progress percentage (0–100) and discovered devices. (Exempt from rate limits).
-- **Response**:
-  ```json
-  {
-    "job_id": "47c7c52f982e47b8b9925d2664b8ac15",
-    "status": "completed",
-    "progress": 100,
-    "devices": [
-      {
-        "ip": "192.168.1.1",
-        "hostname": "router.local",
-        "open_ports": [
-          { "port": 53, "service": "domain" },
-          { "port": 80, "service": "http" },
-          { "port": 443, "service": "https" }
-        ]
-      }
-    ]
-  }
-  ```
-
-### 4. Global Public Port Reachability Check
-`POST /api/check/public`
-- **Request Body**:
-  ```json
-  {
-    "port": 80,
-    "runs": 3
-  }
-  ```
-  *(Target host is strictly locked to this machine's verified public IPv4. Runs between 1 and 5).*
-- **Rate Limit**: 5 triggers per minute per client IP.
-- **Response**: `{ "job_id": "c4b8e01344494ea9becaef4b8f23bb2b" }`
-
-`GET /api/check/public/{job_id}`
-- **Poll Status**: Returns aggregated latency statistics across all 5 continents. (Exempt from rate limits).
-- **Response**:
-  ```json
-  {
-    "job_id": "c4b8e01344494ea9becaef4b8f23bb2b",
-    "status": "completed",
-    "results": [
-      {
-        "location": "Germany (Frankfurt)",
-        "country": "Germany",
-        "region": "Europe",
-        "status": "Open",
-        "median": 45.2,
-        "min": 44.1,
-        "max": 47.8,
-        "failed": 0
-      }
-    ]
-  }
-  ```
-
----
-
-## check-host.net Rate Limits & Caching
-
-The public check service queries `https://check-host.net`. Please be aware of the following policies enforced in the backend:
-1. **In-Memory Caching (45 Seconds)**: Successful check results for a given `(port, runs)` configuration are cached for 45 seconds. Repeated checks within this window return cached data instantly without hitting the external API.
-2. **Defensive Delays**: Multi-run tests execute with a 1.2-second pause between iterations to prevent tripping check-host's IP rate limit.
-3. **Trigger Rate Limit**: Client-side triggers are capped at 5 trigger requests per minute per IP.
-4. **Data Privacy**: No scan or check results are written to disk or persisted to databases.
-
----
-
-## Running the Automated Test Suite
-
-Run the full pytest suite:
 ```bash
-python -m pytest
+uvicorn app.main:app --reload
+# open http://127.0.0.1:8000
 ```
-Output:
-```text
-tests\test_api.py ......                                                 [ 21%]
-tests\test_cgnat.py .......                                              [ 46%]
-tests\test_checkhost.py .........                                        [ 78%]
-tests\test_safety.py ......                                              [100%]
-============================= 28 passed in 7.33s ==============================
+
+**Build a standalone .exe**
+
+```bash
+build\build_exe.bat
+# result: dist\PortHole98.exe
 ```
+
+> Windows SmartScreen or antivirus may warn about the .exe because it is unsigned and built with PyInstaller. That is a common false alarm for network tools. The full source is in this repo.
 
 ---
 
-## Building the Standalone Windows Executable (.exe)
+## How it works
 
-To bundle PortHole 98 into a standalone Windows executable:
-1. Ensure `pyinstaller` is installed:
-   ```bash
-   pip install pyinstaller
-   ```
-2. Run the build batch file:
-   ```bash
-   build\build_exe.bat
-   ```
-3. The compiled binary will be placed at:
-   ```text
-   dist\PortHole98.exe
-   ```
+```
+┌──────────────────────────────┐
+│  Retro GUI (HTML/CSS/JS)     │  no frameworks, no images
+└──────────────┬───────────────┘
+               │ localhost only (127.0.0.1)
+┌──────────────▼───────────────┐
+│  FastAPI backend (async)     │
+│  ├─ network_info  → ipify, UPnP, CGNAT logic
+│  ├─ local_scan    → asyncio TCP scanner
+│  ├─ checkhost     → check-host.net client + stats
+│  └─ safety        → private ranges, own-IP only, rate limits
+└──────────────────────────────┘
+```
+
+**CGNAT detection:** your router's WAN IP is compared with the public IP the internet sees. CGNAT is flagged if they differ, or if the WAN IP is in `100.64.0.0/10` or a private range. If the router's address can't be read, the app says **UNKNOWN** instead of guessing.
+
+**Latency numbers:** a single TCP handshake can be an outlier, so each location is checked several times and the app reports the median.
 
 ---
 
-## Disclaimer & Legal Notice
+## API
 
-> **IMPORTANT**: Only scan networks you own or have explicit permission to test. Unauthorized port scanning may violate local laws and network terms of service.
+| Method | Endpoint | What it does |
+|---|---|---|
+| GET | `/api/network` | Public IPs, router WAN IP, CGNAT verdict, detected local subnet |
+| POST | `/api/scan/local` | Scans a private subnet for open ports |
+| POST | `/api/check/public` | Starts a public reachability check for a port on your own public IP |
+| GET | `/api/check/public/{job_id}` | Progress and results of a check |
+| GET | `/api/nodes` | The check-host.net locations in use |
+
+---
+
+## Safety and ethics
+
+PortHole 98 is for **your own network**.
+
+- Local scans are only accepted for private ranges (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`).
+- The public check only tests the IP the app detects for *you*, never a host someone types in.
+- Scan and check endpoints are rate limited.
+- Results live in memory only and are never written to disk.
+- The server binds to `127.0.0.1`, so nobody else on your network can use it.
+
+Only scan networks you own or have explicit permission to test.
+
+---
+
+## Roadmap
+
+- [ ] Scan history and export (CSV/JSON)
+- [ ] New-device alerts on your LAN
+- [ ] UDP port checks
+- [ ] Signed installer
+- [ ] Light "classic themes" (Windows 95 teal, 98 standard, high contrast)
+
+---
+
+## Credits
+
+- Public multi-location checks by [check-host.net](https://check-host.net)
+- Public IP lookup by [ipify](https://www.ipify.org)
+- Window and Windows 95/98 look inspired by classic Windows interface design. Not affiliated with Microsoft.
+
+---
+
+<div align="center">
+
+**Made by Rayane Zirha · RZ™**
+
+If PortHole 98 helped you debug a port, drop a ⭐
+
+</div>
