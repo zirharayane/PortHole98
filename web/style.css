@@ -1,15 +1,15 @@
 /* ==========================================================================
    PortHole 98 — Authentic Windows 95 / 98 Retro CSS
-   Strict pixel geometry, 3D beveled borders, no border-radius, no soft shadows
+   Edge-to-edge window layout, 3D beveled borders, no border-radius, no soft shadows
    ========================================================================== */
 
 :root {
     --win-face: #c0c0c0;
+    --win-desktop: #008080;
     --win-highlight: #ffffff;
     --win-light-shadow: #dfdfdf;
     --win-shadow: #808080;
     --win-dark: #000000;
-    --win-desktop: #008080;
     --win-title-start: #000080;
     --win-title-end: #1084d0;
     --win-text: #000000;
@@ -27,7 +27,7 @@
 }
 
 body {
-    background-color: var(--win-desktop);
+    background-color: var(--win-face);
     font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
     font-size: 11px;
     color: var(--win-text);
@@ -74,6 +74,7 @@ body.busy, body.busy * {
     padding: 4px 12px;
     cursor: default;
     outline: none;
+    -webkit-app-region: no-drag;
 }
 
 .bevel-button:active, .bevel-button.active {
@@ -91,45 +92,37 @@ body.busy, body.busy * {
 }
 
 /* ==========================================================================
-   Main Window Layout
+   Edge-to-Edge Main Window Layout (Zero empty space)
    ========================================================================== */
 #main-window {
-    position: absolute;
-    top: calc(50% - 20px);
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 680px;
-    min-width: 640px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
     background-color: var(--win-face);
     display: flex;
     flex-direction: column;
     z-index: 100;
+    overflow: hidden;
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-dark);
 }
 
-@media (max-width: 660px) {
-    #main-window {
-        width: 100vw !important;
-        height: calc(100vh - 30px) !important;
-        top: 0 !important;
-        left: 0 !important;
-        transform: none !important;
-        min-width: 100% !important;
-    }
-}
-
-/* Title Bar */
+/* Title Bar (Native Frameless Dragging in pywebview) */
 .title-bar {
-    height: 20px;
+    height: 22px;
     background: linear-gradient(90deg, var(--win-title-start), var(--win-title-end));
     padding: 2px 3px 2px 4px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     cursor: move;
-}
-
-.title-bar.inactive {
-    background: var(--win-shadow);
+    -webkit-app-region: drag;
+    user-select: none;
+    flex-shrink: 0;
 }
 
 .title-bar-text {
@@ -138,18 +131,20 @@ body.busy, body.busy * {
     letter-spacing: 0.5px;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
+    pointer-events: none;
 }
 
 .title-bar-icon {
-    width: 14px;
-    height: 14px;
+    width: 15px;
+    height: 15px;
     display: inline-block;
 }
 
 .title-bar-controls {
     display: flex;
     gap: 2px;
+    -webkit-app-region: no-drag;
 }
 
 .title-button {
@@ -167,6 +162,7 @@ body.busy, body.busy * {
     text-align: center;
     cursor: default;
     color: var(--win-text);
+    -webkit-app-region: no-drag;
 }
 
 .title-button:active {
@@ -183,8 +179,10 @@ body.busy, body.busy * {
     display: flex;
     background-color: var(--win-face);
     border-bottom: 1px solid var(--win-shadow);
-    padding: 1px 2px;
+    padding: 2px 4px;
     font-size: 11px;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
 }
 
 .menu-item {
@@ -205,7 +203,7 @@ body.busy, body.busy * {
     left: 0;
     background-color: var(--win-face);
     color: var(--win-text);
-    min-width: 140px;
+    min-width: 160px;
     z-index: 1000;
     padding: 2px;
 }
@@ -215,7 +213,7 @@ body.busy, body.busy * {
 }
 
 .dropdown-entry {
-    padding: 3px 12px;
+    padding: 4px 12px;
     cursor: default;
     display: flex;
     justify-content: space-between;
@@ -238,6 +236,9 @@ body.busy, body.busy * {
     padding: 8px;
     background-color: var(--win-face);
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* ==========================================================================
@@ -246,6 +247,8 @@ body.busy, body.busy * {
 .tabs-container {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow: hidden;
 }
 
 .tabs-nav {
@@ -253,6 +256,7 @@ body.busy, body.busy * {
     gap: 0px;
     margin-left: 4px;
     z-index: 10;
+    flex-shrink: 0;
 }
 
 .tab-btn {
@@ -262,7 +266,7 @@ body.busy, body.busy * {
     border-right: 1px solid var(--win-dark);
     box-shadow: inset 1px 1px 0 var(--win-light-shadow), inset -1px 0 0 var(--win-shadow);
     border-bottom: none;
-    padding: 4px 10px 3px 10px;
+    padding: 4px 12px 3px 12px;
     cursor: default;
     font-family: inherit;
     font-size: 11px;
@@ -288,11 +292,13 @@ body.busy, body.busy * {
     border-right: 1px solid var(--win-dark);
     border-bottom: 1px solid var(--win-dark);
     box-shadow: inset 1px 1px 0 var(--win-light-shadow), inset -1px -1px 0 var(--win-shadow);
-    min-height: 380px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .tab-panel.active {
-    display: block;
+    display: flex;
+    flex-direction: column;
 }
 
 /* ==========================================================================
@@ -301,8 +307,17 @@ body.busy, body.busy * {
 fieldset.group-box {
     border: 1px solid var(--win-shadow);
     box-shadow: 1px 1px 0 var(--win-highlight);
-    padding: 10px 12px 10px 12px;
-    margin-bottom: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+
+fieldset.group-box.flex-grow {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 180px;
+    margin-bottom: 0;
 }
 
 legend {
@@ -330,7 +345,7 @@ input[type="text"], input[type="number"], select {
     border-right: 1px solid var(--win-highlight);
     border-bottom: 1px solid var(--win-highlight);
     box-shadow: inset 1px 1px 0 var(--win-dark), inset -1px -1px 0 var(--win-light-shadow);
-    padding: 3px 4px;
+    padding: 3px 5px;
     font-family: "Courier New", monospace;
     font-size: 11px;
     outline: none;
@@ -344,7 +359,7 @@ input[readonly] {
 select {
     font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
     font-size: 11px;
-    height: 22px;
+    height: 23px;
     background-color: #ffffff;
 }
 
@@ -356,10 +371,11 @@ select {
     padding: 2px 6px;
     font-weight: bold;
     font-size: 10px;
+    text-align: center;
 }
 
 .tag-red {
-    background-color: #ff0000;
+    background-color: #c00000;
     color: #ffffff;
 }
 
@@ -383,7 +399,8 @@ select {
    ========================================================================== */
 .list-view-container {
     background-color: #ffffff;
-    height: 230px;
+    flex: 1;
+    min-height: 140px;
     overflow-y: scroll;
     border-top: 1px solid var(--win-shadow);
     border-left: 1px solid var(--win-shadow);
@@ -436,11 +453,6 @@ table.list-view tbody tr:hover {
     color: var(--win-selection-text);
 }
 
-table.list-view tbody tr.selected {
-    background-color: var(--win-selection);
-    color: var(--win-selection-text);
-}
-
 /* ==========================================================================
    Classic Segmented Progress Bar (Blue Blocks)
    ========================================================================== */
@@ -456,6 +468,7 @@ table.list-view tbody tr.selected {
     display: flex;
     overflow: hidden;
     margin: 8px 0;
+    flex-shrink: 0;
 }
 
 .progress-bar-fill {
@@ -472,15 +485,17 @@ table.list-view tbody tr.selected {
 }
 
 /* ==========================================================================
-   Status Bar
+   Status Bar (Window Bottom)
    ========================================================================== */
 .status-bar {
     display: flex;
     background-color: var(--win-face);
-    padding: 2px 3px;
+    padding: 3px 3px;
     gap: 3px;
     font-size: 11px;
     border-top: 1px solid var(--win-shadow);
+    flex-shrink: 0;
+    width: 100%;
 }
 
 .status-panel {
@@ -494,10 +509,18 @@ table.list-view tbody tr.selected {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
 
 .status-panel.flex {
     flex: 1;
+}
+
+.status-panel.branding {
+    font-weight: bold;
+    color: #000080;
+    padding-right: 8px;
 }
 
 /* ==========================================================================
@@ -510,7 +533,7 @@ table.list-view tbody tr.selected {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.25);
     z-index: 2000;
     align-items: center;
     justify-content: center;
@@ -522,8 +545,8 @@ table.list-view tbody tr.selected {
 
 .modal-window {
     background-color: var(--win-face);
-    min-width: 320px;
-    max-width: 480px;
+    min-width: 340px;
+    max-width: 500px;
 }
 
 .modal-body {
@@ -552,74 +575,11 @@ table.list-view tbody tr.selected {
     gap: 8px;
 }
 
-/* ==========================================================================
-   Taskbar (Screen Bottom)
-   ========================================================================== */
-#taskbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    height: 28px;
-    background-color: var(--win-face);
-    border-top: 1px solid var(--win-highlight);
-    box-shadow: inset 0 1px 0 var(--win-light-shadow);
-    display: flex;
-    align-items: center;
-    padding: 2px 3px;
-    gap: 4px;
-    z-index: 1000;
-}
-
-.start-button {
-    height: 22px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 6px;
-    font-weight: bold;
-}
-
-.start-icon {
-    width: 16px;
-    height: 16px;
-}
-
-.taskbar-tasks {
-    flex: 1;
-    display: flex;
-    gap: 3px;
-}
-
-.taskbar-item {
-    height: 22px;
-    min-width: 140px;
-    max-width: 180px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    padding: 2px 6px;
-    font-weight: bold;
-    text-align: left;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
-.system-tray {
-    height: 22px;
-    padding: 2px 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
-    font-size: 11px;
-}
-
 /* Disclaimer text */
 .disclaimer-note {
-    margin-top: 8px;
+    margin-top: 6px;
     font-size: 10px;
     color: #404040;
     font-style: italic;
+    flex-shrink: 0;
 }

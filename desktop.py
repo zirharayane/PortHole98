@@ -5,7 +5,7 @@ import sys
 import threading
 import time
 import urllib.request
-from typing import Optional
+from typing import Any, Optional
 
 import uvicorn
 from app.main import app
@@ -73,6 +73,35 @@ def wait_for_server(port: int, max_attempts: int = 60, delay: float = 0.1) -> bo
     return False
 
 
+class DesktopAPI:
+    """Bridge exposed to JavaScript inside pywebview for native window controls."""
+
+    def __init__(self) -> None:
+        self.window: Optional[Any] = None
+        self._is_maximized: bool = False
+
+    def minimize(self) -> None:
+        """Minimize the native application window."""
+        if self.window:
+            self.window.minimize()
+
+    def toggle_maximize(self) -> bool:
+        """Toggle maximize and restore states on the native window."""
+        if self.window:
+            if self._is_maximized:
+                self.window.restore()
+                self._is_maximized = False
+            else:
+                self.window.maximize()
+                self._is_maximized = True
+        return self._is_maximized
+
+    def close(self) -> None:
+        """Destroy the native window and quit."""
+        if self.window:
+            self.window.destroy()
+
+
 def main() -> None:
     """Entry point for the native desktop application."""
     # 1. Verify pywebview availability
@@ -100,7 +129,10 @@ def main() -> None:
     def on_window_closed() -> None:
         server_thread.stop()
 
-    # 6. Create native pywebview window
+    # 6. Initialize bridge API
+    api = DesktopAPI()
+
+    # 7. Create native frameless pywebview window
     try:
         window = webview.create_window(
             title="PortHole 98",
@@ -108,13 +140,33 @@ def main() -> None:
             width=900,
             height=680,
             min_size=(640, 480),
+            frameless=True,
+            js_api=api,
         )
+        api.window = window
         window.events.closed += on_window_closed
         webview.start(gui="edgechromium")
     except Exception as exc:
-        # Check if failure is related to missing WebView2
         err_str = str(exc).lower()
-        if "webview2" in err_str or "edgechromium" in err_str or "activex" in err_str:
+        if "frameless" in err_str:
+            # Fallback to framed window if OS/backend has issue with frameless
+            print("[INFO] Falling back to standard window frame...", file=sys.stderr)
+            try:
+                window = webview.create_window(
+                    title="PortHole 98",
+                    url=f"http://{host}:{port}/",
+                    width=900,
+                    height=680,
+                    min_size=(640, 480),
+                    frameless=False,
+                    js_api=api,
+                )
+                api.window = window
+                window.events.closed += on_window_closed
+                webview.start(gui="edgechromium")
+            except Exception as exc_fallback:
+                print(f"[ERROR] Native window fallback failed: {exc_fallback}", file=sys.stderr)
+        elif "webview2" in err_str or "edgechromium" in err_str or "activex" in err_str:
             show_missing_webview2_dialog()
         else:
             print(f"[ERROR] Failed to start native window: {exc}", file=sys.stderr)

@@ -1,5 +1,7 @@
 # PortHole 98
 
+**Made by Rayane Zirha  RZ™**
+
 > **PortHole 98** is a classic Windows 95/98 styled network diagnostic dashboard built with **Python 3.11+**, **FastAPI**, and a zero-dependency retro HTML5/CSS3/JavaScript frontend. It identifies open ports on your local network, checks whether your public IP is reachable from the internet, and measures TCP connect latency from nodes across 5 continents.
 
 ![PortHole 98 Dashboard](docs/screenshot.png)
@@ -8,10 +10,12 @@
 
 ## Features
 
+- **Branding**:
+  - Designed and developed with pride: **Made by Rayane Zirha  RZ™**.
 - **Public IP & CGNAT Detection**:
   - Automatically discovers public IPv4 and IPv6 via `api.ipify.org` and `api64.ipify.org`.
   - Queries router WAN IP via UPnP IGD (`miniupnpc`), with manual WAN IP entry fallback.
-  - Accurately classifies Carrier-Grade NAT (CGNAT) by analyzing IP parity, RFC 6598 (`100.64.0.0/10`), and RFC 1918 private address ranges.
+  - Accurately classifies Carrier-Grade NAT (CGNAT) by analyzing IP parity, RFC 6598 (`100.64.0.0/10`), and RFC 1918 private address ranges (shows grey "UNKNOWN" when router WAN IP is unknown).
 - **Two-Stage Local Subnet Scanner**:
   - **Stage 1 (Host Discovery)**: Probes `/24` subnets (capped at /24 for safety) to rapidly detect responsive live hosts.
   - **Stage 2 (Port Scanning)**: Scans open ports only on live hosts using an asynchronous TCP connect scanner with `asyncio.Semaphore(200)` and a `0.5s` connection timeout.
@@ -22,8 +26,9 @@
   - Multi-run iterations (1–5 runs, default 3) with median, min, max, and failed run statistics.
   - In-memory 45-second cache to prevent excessive queries and respect external rate limits.
 - **Authentic Windows 95/98 Retro UI**:
-  - Classic teal desktop (`#008080`), 3D beveled windows and buttons, navy-to-blue title bar gradient, sunken inputs and list views, MS Sans Serif & Courier New typography.
-  - Draggable window with boundary constraint, taskbar with working live clock, Start menu, tabbed navigation, column-header sorting, segmented blue-block progress bars, and classic modal dialogs.
+  - Edge-to-edge window layout filling the application window seamlessly, 3D beveled styling, navy-to-blue title bar gradient, sunken inputs and list views, MS Sans Serif & Courier New typography.
+  - Frameless native desktop integration with native title bar dragging, double-click maximize/restore, minimize, and close controls.
+  - Menu bar with dropdown menus (File, Help), tabbed navigation, column-header sorting, segmented blue-block progress bars, and classic modal dialogs.
   - **Zero external dependencies**: No UI frameworks, no CDNs, no external image files (pure CSS/SVG pixel artwork).
 - **Dual Runtime Modes**:
   - Standard web server mode (`uvicorn app.main:app --reload`).

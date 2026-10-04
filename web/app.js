@@ -1,6 +1,7 @@
 /**
  * PortHole 98 — Authentic Windows 95/98 Client Application
  * Zero external libraries, pure HTML5/CSS3/ES6
+ * Native frameless window integration with pywebview
  */
 
 (function () {
@@ -14,6 +15,7 @@
         sortAsc: true,
         localScanPollingTimer: null,
         publicCheckPollingTimer: null,
+        isBrowserMaximized: false,
     };
 
     // DOM Elements
@@ -23,15 +25,11 @@
         btnMinimize: document.getElementById("btn-minimize"),
         btnMaximize: document.getElementById("btn-maximize"),
         btnClose: document.getElementById("btn-close"),
-        taskbarApp: document.getElementById("taskbar-app"),
-        startBtn: document.getElementById("start-btn"),
-        startMenu: document.getElementById("start-menu"),
-        trayClock: document.getElementById("tray-clock"),
 
         // Status bar
         statusMain: document.getElementById("status-panel-main"),
         statusIp: document.getElementById("status-panel-ip"),
-        statusNodes: document.getElementById("status-panel-nodes"),
+        statusBranding: document.getElementById("status-panel-branding"),
 
         // Network Tab
         txtPublicIpv4: document.getElementById("txt-public-ipv4"),
@@ -93,20 +91,6 @@
     };
 
     /* ==========================================================================
-       Taskbar Clock
-       ========================================================================== */
-    function updateClock() {
-        const now = new Date();
-        let hours = now.getHours();
-        const minutes = String(now.getMinutes()).padStart(2, "0");
-        const ampm = hours >= 12 ? "PM" : "AM";
-        hours = hours % 12 || 12;
-        elements.trayClock.textContent = `${hours}:${minutes} ${ampm}`;
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    /* ==========================================================================
        Modal Dialog Controller
        ========================================================================== */
     function showModal(title, messageHtml, type = "info") {
@@ -127,114 +111,60 @@
     });
 
     /* ==========================================================================
-       Window Dragging Logic
+       Native Window Controls (pywebview Frameless Bridge & Browser Fallback)
        ========================================================================== */
-    let isDragging = false;
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let windowStartX = 0;
-    let windowStartY = 0;
+    function isPywebviewActive() {
+        return window.pywebview && window.pywebview.api;
+    }
 
-    elements.titleBar.addEventListener("mousedown", (e) => {
-        if (e.target.closest(".title-bar-controls")) return;
-        isDragging = true;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-
-        const rect = elements.mainWindow.getBoundingClientRect();
-        windowStartX = rect.left;
-        windowStartY = rect.top;
-
-        // Disengage centering transform on first drag
-        elements.mainWindow.style.transform = "none";
-        elements.mainWindow.style.left = `${windowStartX}px`;
-        elements.mainWindow.style.top = `${windowStartY}px`;
-    });
-
-    window.addEventListener("mousemove", (e) => {
-        if (!isDragging) return;
-        const deltaX = e.clientX - dragStartX;
-        const deltaY = e.clientY - dragStartY;
-
-        let newX = windowStartX + deltaX;
-        let newY = windowStartY + deltaY;
-
-        // Boundary clamp
-        const maxX = window.innerWidth - 60;
-        const maxY = window.innerHeight - 50;
-        newX = Math.max(0, Math.min(newX, maxX));
-        newY = Math.max(0, Math.min(newY, maxY));
-
-        elements.mainWindow.style.left = `${newX}px`;
-        elements.mainWindow.style.top = `${newY}px`;
-    });
-
-    window.addEventListener("mouseup", () => {
-        isDragging = false;
-    });
-
-    /* ==========================================================================
-       Window Controls (Minimize, Maximize, Close, Taskbar)
-       ========================================================================== */
-    let isMaximized = false;
-    let preMaxRect = null;
-
-    elements.btnMinimize.addEventListener("click", () => {
-        elements.mainWindow.style.display = "none";
-        elements.taskbarApp.classList.remove("active");
-    });
-
-    elements.taskbarApp.addEventListener("click", () => {
-        if (elements.mainWindow.style.display === "none") {
-            elements.mainWindow.style.display = "flex";
-            elements.taskbarApp.classList.add("active");
+    function minimizeWindow() {
+        if (isPywebviewActive()) {
+            window.pywebview.api.minimize();
         } else {
-            elements.mainWindow.style.display = "none";
-            elements.taskbarApp.classList.remove("active");
+            showModal("Minimize", "<p>Minimize is only available in native desktop app mode.</p>", "info");
         }
-    });
+    }
 
-    elements.btnMaximize.addEventListener("click", () => {
-        if (!isMaximized) {
-            preMaxRect = {
-                left: elements.mainWindow.style.left,
-                top: elements.mainWindow.style.top,
-                width: elements.mainWindow.style.width,
-                transform: elements.mainWindow.style.transform,
-            };
-            elements.mainWindow.style.transform = "none";
-            elements.mainWindow.style.left = "0px";
-            elements.mainWindow.style.top = "0px";
-            elements.mainWindow.style.width = "100vw";
-            elements.mainWindow.style.height = "calc(100vh - 28px)";
-            isMaximized = true;
+    function toggleMaximizeWindow() {
+        if (isPywebviewActive()) {
+            window.pywebview.api.toggle_maximize();
         } else {
-            if (preMaxRect) {
-                elements.mainWindow.style.left = preMaxRect.left;
-                elements.mainWindow.style.top = preMaxRect.top;
-                elements.mainWindow.style.width = preMaxRect.width;
-                elements.mainWindow.style.transform = preMaxRect.transform;
+            // Browser fullscreen fallback
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            } else {
+                document.exitFullscreen().catch(() => {});
             }
-            elements.mainWindow.style.height = "auto";
-            isMaximized = false;
         }
-    });
+    }
 
-    elements.btnClose.addEventListener("click", () => {
-        showModal(
-            "Exit PortHole 98",
-            "<p>To close the application, please close your browser tab or terminate the process in the terminal.</p>",
-            "info"
-        );
+    function closeWindow() {
+        if (isPywebviewActive()) {
+            window.pywebview.api.close();
+        } else {
+            showModal(
+                "Exit PortHole 98",
+                "<p>To close PortHole 98 in browser mode, please close your browser tab or terminate the process in your terminal.</p>",
+                "info"
+            );
+        }
+    }
+
+    elements.btnMinimize.addEventListener("click", minimizeWindow);
+    elements.btnMaximize.addEventListener("click", toggleMaximizeWindow);
+    elements.btnClose.addEventListener("click", closeWindow);
+
+    // Double-clicking the title bar toggles maximize / restore
+    elements.titleBar.addEventListener("dblclick", (e) => {
+        if (e.target.closest(".title-bar-controls")) return;
+        toggleMaximizeWindow();
     });
 
     /* ==========================================================================
-       Menu Bar & Start Menu
+       Menu Bar Navigation
        ========================================================================== */
     function closeAllMenus() {
         document.querySelectorAll(".menu-item").forEach(m => m.classList.remove("open"));
-        elements.startMenu.style.display = "none";
-        elements.startBtn.classList.remove("active");
     }
 
     document.querySelectorAll(".menu-item").forEach(menu => {
@@ -246,35 +176,27 @@
         });
     });
 
-    elements.startBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = elements.startMenu.style.display === "block";
-        closeAllMenus();
-        if (!isOpen) {
-            elements.startMenu.style.display = "block";
-            elements.startBtn.classList.add("active");
-        }
-    });
-
     window.addEventListener("click", () => {
         closeAllMenus();
     });
 
     // Menu Item Actions
     document.getElementById("menu-refresh").addEventListener("click", () => loadNetworkInfo());
-    document.getElementById("start-menu-refresh").addEventListener("click", () => loadNetworkInfo());
 
     function showAboutDialog() {
         showModal(
             "About PortHole 98",
             `<div style="text-align: left;">
-                <p style="font-weight: bold; font-size: 13px; margin-bottom: 6px;">PortHole 98 — Version 1.0</p>
+                <p style="font-weight: bold; font-size: 14px; margin-bottom: 2px;">PortHole 98</p>
+                <div style="font-size: 12px; font-weight: bold; color: #000080; margin-bottom: 8px;">
+                    Made by Rayane Zirha &nbsp;<span style="font-size: 16px; font-weight: 900; letter-spacing: 0.5px;">RZ™</span>
+                </div>
                 <p style="margin-bottom: 6px;">A classic Windows 95/98 network diagnostic system.</p>
                 <p style="margin-bottom: 6px; color: #555;">Features:</p>
                 <ul style="margin-left: 18px; margin-bottom: 8px;">
                     <li>Public IPv4 & IPv6 Discovery via ipify</li>
                     <li>UPnP IGD Router WAN IP & CGNAT Detection</li>
-                    <li>Asynchronous Concurrent Local Subnet Port Scanner</li>
+                    <li>Two-Stage Concurrent Local Subnet Port Scanner</li>
                     <li>Global Multi-Continent Latency Testing via check-host.net</li>
                 </ul>
                 <div class="bevel-sunken" style="padding: 6px; background: #fff; margin-top: 8px; font-style: italic; color: #b00000; font-weight: bold;">
@@ -286,7 +208,6 @@
     }
 
     document.getElementById("menu-about").addEventListener("click", showAboutDialog);
-    document.getElementById("start-menu-about").addEventListener("click", showAboutDialog);
 
     function runAllChecks() {
         loadNetworkInfo().then(() => {
@@ -296,10 +217,7 @@
     }
 
     document.getElementById("menu-run-all").addEventListener("click", runAllChecks);
-    document.getElementById("start-menu-run-all").addEventListener("click", runAllChecks);
-
-    document.getElementById("menu-exit").addEventListener("click", () => elements.btnClose.click());
-    document.getElementById("start-menu-exit").addEventListener("click", () => elements.btnClose.click());
+    document.getElementById("menu-exit").addEventListener("click", closeWindow);
 
     /* ==========================================================================
        Tab Navigation
@@ -319,7 +237,7 @@
     /* ==========================================================================
        API Communications — Tab 1: Network Information
        ========================================================================== */
-    async function loadNetworkInfo(manualWanIp = null) {
+    async function loadNetworkInfo(manualWanIp = null, isInitialLoad = false) {
         elements.statusMain.textContent = "Querying network configuration...";
         document.body.classList.add("busy");
 
@@ -368,9 +286,12 @@
                 elements.wanSrcLabel.textContent = "(Not detected)";
             }
 
-            // Render CGNAT Status
-            if (data.cgnat) {
-                elements.badgeCgnat.textContent = "YES (CGNAT / Upstream NAT)";
+            // Render CGNAT Status: Grey "UNKNOWN" when router WAN IP is unknown!
+            if (!data.router_wan_ip) {
+                elements.badgeCgnat.textContent = "UNKNOWN";
+                elements.badgeCgnat.className = "indicator-tag tag-gray";
+            } else if (data.cgnat) {
+                elements.badgeCgnat.textContent = "YES (CGNAT Active)";
                 elements.badgeCgnat.className = "indicator-tag tag-red";
             } else {
                 elements.badgeCgnat.textContent = "NO (Direct Public IP)";
@@ -386,9 +307,10 @@
                 }
             }
 
-            elements.statusMain.textContent = "Network discovery complete.";
+            // Status bar says "Ready" on startup
+            elements.statusMain.textContent = "Ready";
 
-            // If CGNAT is detected and user hasn't seen the notice yet, inform them
+            // Show CGNAT warning modal only if CGNAT is positively detected
             if (data.cgnat && !sessionStorage.getItem("cgnat_notified")) {
                 sessionStorage.setItem("cgnat_notified", "1");
                 showModal(
@@ -401,7 +323,7 @@
             }
 
         } catch (err) {
-            elements.statusMain.textContent = "Network query failed.";
+            elements.statusMain.textContent = "Ready";
             showModal("Network Error", `<p>Failed to query network configuration:</p><p style="color: red; margin-top: 4px;">${err.message}</p>`, "error");
         } finally {
             document.body.classList.remove("busy");
@@ -454,7 +376,7 @@
         } catch (err) {
             document.body.classList.remove("busy");
             elements.btnStartLocalScan.disabled = false;
-            elements.statusMain.textContent = "Scan failed.";
+            elements.statusMain.textContent = "Ready";
             showModal("Scan Error", `<p>${err.message}</p>`, "error");
         }
     }
@@ -484,13 +406,14 @@
                     clearInterval(state.localScanPollingTimer);
                     document.body.classList.remove("busy");
                     elements.btnStartLocalScan.disabled = false;
-                    elements.statusMain.textContent = "Scan job failed.";
+                    elements.statusMain.textContent = "Ready";
                     showModal("Scan Error", `<p>${data.error || "An unknown error occurred during scan."}</p>`, "error");
                 }
             } catch (err) {
                 clearInterval(state.localScanPollingTimer);
                 document.body.classList.remove("busy");
                 elements.btnStartLocalScan.disabled = false;
+                elements.statusMain.textContent = "Ready";
                 showModal("Connection Lost", `<p>Lost connection to scan worker: ${err.message}</p>`, "error");
             }
         }, 600);
@@ -555,7 +478,7 @@
         } catch (err) {
             document.body.classList.remove("busy");
             elements.btnStartPublicCheck.disabled = false;
-            elements.statusMain.textContent = "Public check failed.";
+            elements.statusMain.textContent = "Ready";
             showModal("Check Error", `<p>${err.message}</p>`, "error");
         }
     }
@@ -585,13 +508,14 @@
                     clearInterval(state.publicCheckPollingTimer);
                     document.body.classList.remove("busy");
                     elements.btnStartPublicCheck.disabled = false;
-                    elements.statusMain.textContent = "Check job failed.";
+                    elements.statusMain.textContent = "Ready";
                     showModal("Check Error", `<p>${data.error || "An unknown error occurred during check."}</p>`, "error");
                 }
             } catch (err) {
                 clearInterval(state.publicCheckPollingTimer);
                 document.body.classList.remove("busy");
                 elements.btnStartPublicCheck.disabled = false;
+                elements.statusMain.textContent = "Ready";
                 showModal("Connection Lost", `<p>Lost connection to check worker: ${err.message}</p>`, "error");
             }
         }, 1200);
@@ -661,7 +585,7 @@
        Initial Bootstrapping
        ========================================================================== */
     window.addEventListener("DOMContentLoaded", () => {
-        loadNetworkInfo();
+        loadNetworkInfo(null, true);
     });
 
 })();
