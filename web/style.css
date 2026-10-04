@@ -1,0 +1,625 @@
+/* ==========================================================================
+   PortHole 98 — Authentic Windows 95 / 98 Retro CSS
+   Strict pixel geometry, 3D beveled borders, no border-radius, no soft shadows
+   ========================================================================== */
+
+:root {
+    --win-face: #c0c0c0;
+    --win-highlight: #ffffff;
+    --win-light-shadow: #dfdfdf;
+    --win-shadow: #808080;
+    --win-dark: #000000;
+    --win-desktop: #008080;
+    --win-title-start: #000080;
+    --win-title-end: #1084d0;
+    --win-text: #000000;
+    --win-text-white: #ffffff;
+    --win-selection: #000080;
+    --win-selection-text: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: none;
+    font-smooth: never;
+}
+
+body {
+    background-color: var(--win-desktop);
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    font-size: 11px;
+    color: var(--win-text);
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    user-select: none;
+    position: relative;
+}
+
+/* Hourglass wait state */
+body.busy, body.busy * {
+    cursor: wait !important;
+}
+
+/* ==========================================================================
+   Classic 3D Bevel Utilities
+   ========================================================================== */
+.bevel-raised {
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-dark);
+    box-shadow: inset 1px 1px 0px var(--win-light-shadow), inset -1px -1px 0px var(--win-shadow);
+}
+
+.bevel-sunken {
+    border-top: 1px solid var(--win-shadow);
+    border-left: 1px solid var(--win-shadow);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0px var(--win-dark), inset -1px -1px 0px var(--win-light-shadow);
+}
+
+.bevel-button {
+    background-color: var(--win-face);
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-dark);
+    box-shadow: inset 1px 1px 0px var(--win-light-shadow), inset -1px -1px 0px var(--win-shadow);
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    font-size: 11px;
+    padding: 4px 12px;
+    cursor: default;
+    outline: none;
+}
+
+.bevel-button:active, .bevel-button.active {
+    border-top: 1px solid var(--win-dark);
+    border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0px var(--win-shadow), inset -1px -1px 0px var(--win-light-shadow);
+    padding: 5px 11px 3px 13px;
+}
+
+.bevel-button:focus-visible {
+    outline: 1px dotted var(--win-dark);
+    outline-offset: -4px;
+}
+
+/* ==========================================================================
+   Main Window Layout
+   ========================================================================== */
+#main-window {
+    position: absolute;
+    top: calc(50% - 20px);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 680px;
+    min-width: 640px;
+    background-color: var(--win-face);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+}
+
+@media (max-width: 660px) {
+    #main-window {
+        width: 100vw !important;
+        height: calc(100vh - 30px) !important;
+        top: 0 !important;
+        left: 0 !important;
+        transform: none !important;
+        min-width: 100% !important;
+    }
+}
+
+/* Title Bar */
+.title-bar {
+    height: 20px;
+    background: linear-gradient(90deg, var(--win-title-start), var(--win-title-end));
+    padding: 2px 3px 2px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: move;
+}
+
+.title-bar.inactive {
+    background: var(--win-shadow);
+}
+
+.title-bar-text {
+    font-weight: bold;
+    color: var(--win-text-white);
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.title-bar-icon {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+}
+
+.title-bar-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.title-button {
+    width: 16px;
+    height: 14px;
+    background-color: var(--win-face);
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-dark);
+    box-shadow: inset 1px 1px 0 var(--win-light-shadow), inset -1px -1px 0 var(--win-shadow);
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 10px;
+    text-align: center;
+    cursor: default;
+    color: var(--win-text);
+}
+
+.title-button:active {
+    border-top: 1px solid var(--win-dark);
+    border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0 var(--win-shadow);
+    padding: 1px 0 0 1px;
+}
+
+/* Menu Bar */
+.menu-bar {
+    display: flex;
+    background-color: var(--win-face);
+    border-bottom: 1px solid var(--win-shadow);
+    padding: 1px 2px;
+    font-size: 11px;
+}
+
+.menu-item {
+    position: relative;
+    padding: 2px 6px;
+    cursor: default;
+}
+
+.menu-item:hover, .menu-item.open {
+    background-color: var(--win-selection);
+    color: var(--win-selection-text);
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: var(--win-face);
+    color: var(--win-text);
+    min-width: 140px;
+    z-index: 1000;
+    padding: 2px;
+}
+
+.menu-item.open .dropdown-menu {
+    display: block;
+}
+
+.dropdown-entry {
+    padding: 3px 12px;
+    cursor: default;
+    display: flex;
+    justify-content: space-between;
+}
+
+.dropdown-entry:hover {
+    background-color: var(--win-selection);
+    color: var(--win-selection-text);
+}
+
+.dropdown-divider {
+    height: 1px;
+    margin: 2px 1px;
+    border-top: 1px solid var(--win-shadow);
+    border-bottom: 1px solid var(--win-highlight);
+}
+
+/* Window Content */
+.window-body {
+    padding: 8px;
+    background-color: var(--win-face);
+    flex: 1;
+}
+
+/* ==========================================================================
+   Tabs Control
+   ========================================================================== */
+.tabs-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.tabs-nav {
+    display: flex;
+    gap: 0px;
+    margin-left: 4px;
+    z-index: 10;
+}
+
+.tab-btn {
+    background-color: var(--win-face);
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    box-shadow: inset 1px 1px 0 var(--win-light-shadow), inset -1px 0 0 var(--win-shadow);
+    border-bottom: none;
+    padding: 4px 10px 3px 10px;
+    cursor: default;
+    font-family: inherit;
+    font-size: 11px;
+    position: relative;
+    top: 1px;
+}
+
+.tab-btn.active {
+    top: 0px;
+    padding-top: 5px;
+    padding-bottom: 4px;
+    font-weight: bold;
+    background-color: var(--win-face);
+    box-shadow: inset 1px 1px 0 var(--win-highlight), inset -1px 0 0 var(--win-shadow);
+}
+
+.tab-panel {
+    display: none;
+    background-color: var(--win-face);
+    padding: 10px;
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-dark);
+    box-shadow: inset 1px 1px 0 var(--win-light-shadow), inset -1px -1px 0 var(--win-shadow);
+    min-height: 380px;
+}
+
+.tab-panel.active {
+    display: block;
+}
+
+/* ==========================================================================
+   Group Boxes & Controls
+   ========================================================================== */
+fieldset.group-box {
+    border: 1px solid var(--win-shadow);
+    box-shadow: 1px 1px 0 var(--win-highlight);
+    padding: 10px 12px 10px 12px;
+    margin-bottom: 10px;
+}
+
+legend {
+    padding: 0 4px;
+    font-weight: bold;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.form-row label {
+    min-width: 110px;
+}
+
+/* Sunken Input and Select */
+input[type="text"], input[type="number"], select {
+    background-color: #ffffff;
+    color: #000000;
+    border-top: 1px solid var(--win-shadow);
+    border-left: 1px solid var(--win-shadow);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0 var(--win-dark), inset -1px -1px 0 var(--win-light-shadow);
+    padding: 3px 4px;
+    font-family: "Courier New", monospace;
+    font-size: 11px;
+    outline: none;
+}
+
+input[readonly] {
+    background-color: var(--win-face);
+    color: #000000;
+}
+
+select {
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    font-size: 11px;
+    height: 22px;
+    background-color: #ffffff;
+}
+
+/* ==========================================================================
+   Status & Badge Indicators
+   ========================================================================== */
+.indicator-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.tag-red {
+    background-color: #ff0000;
+    color: #ffffff;
+}
+
+.tag-green {
+    background-color: #008000;
+    color: #ffffff;
+}
+
+.tag-yellow {
+    background-color: #ffff00;
+    color: #000000;
+}
+
+.tag-gray {
+    background-color: #808080;
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   List View Tables
+   ========================================================================== */
+.list-view-container {
+    background-color: #ffffff;
+    height: 230px;
+    overflow-y: scroll;
+    border-top: 1px solid var(--win-shadow);
+    border-left: 1px solid var(--win-shadow);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0 var(--win-dark), inset -1px -1px 0 var(--win-light-shadow);
+}
+
+table.list-view {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+table.list-view th {
+    background-color: var(--win-face);
+    color: var(--win-text);
+    border-top: 1px solid var(--win-highlight);
+    border-left: 1px solid var(--win-highlight);
+    border-right: 1px solid var(--win-dark);
+    border-bottom: 1px solid var(--win-dark);
+    box-shadow: inset 1px 1px 0 var(--win-light-shadow), inset -1px -1px 0 var(--win-shadow);
+    padding: 3px 6px;
+    text-align: left;
+    font-weight: normal;
+    cursor: default;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+table.list-view th:active {
+    border-top: 1px solid var(--win-dark);
+    border-left: 1px solid var(--win-dark);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0 var(--win-shadow);
+    padding: 4px 5px 2px 7px;
+}
+
+table.list-view td {
+    padding: 3px 6px;
+    font-family: "Courier New", monospace;
+    white-space: nowrap;
+    border: none;
+}
+
+table.list-view tbody tr:hover {
+    background-color: var(--win-selection);
+    color: var(--win-selection-text);
+}
+
+table.list-view tbody tr.selected {
+    background-color: var(--win-selection);
+    color: var(--win-selection-text);
+}
+
+/* ==========================================================================
+   Classic Segmented Progress Bar (Blue Blocks)
+   ========================================================================== */
+.progress-bar-container {
+    height: 18px;
+    background-color: #ffffff;
+    border-top: 1px solid var(--win-shadow);
+    border-left: 1px solid var(--win-shadow);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0 var(--win-dark), inset -1px -1px 0 var(--win-light-shadow);
+    padding: 1px;
+    display: flex;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: repeating-linear-gradient(
+        90deg,
+        #000080 0px,
+        #000080 8px,
+        #ffffff 8px,
+        #ffffff 10px
+    );
+    transition: width 0.2s ease-out;
+}
+
+/* ==========================================================================
+   Status Bar
+   ========================================================================== */
+.status-bar {
+    display: flex;
+    background-color: var(--win-face);
+    padding: 2px 3px;
+    gap: 3px;
+    font-size: 11px;
+    border-top: 1px solid var(--win-shadow);
+}
+
+.status-panel {
+    background-color: var(--win-face);
+    border-top: 1px solid var(--win-shadow);
+    border-left: 1px solid var(--win-shadow);
+    border-right: 1px solid var(--win-highlight);
+    border-bottom: 1px solid var(--win-highlight);
+    box-shadow: inset 1px 1px 0 var(--win-light-shadow);
+    padding: 2px 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-panel.flex {
+    flex: 1;
+}
+
+/* ==========================================================================
+   Modal Dialogs (Alerts, Warnings, CGNAT, About)
+   ========================================================================== */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-window {
+    background-color: var(--win-face);
+    min-width: 320px;
+    max-width: 480px;
+}
+
+.modal-body {
+    padding: 16px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+}
+
+.modal-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.modal-content {
+    flex: 1;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.modal-actions {
+    padding: 8px 16px 14px 16px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* ==========================================================================
+   Taskbar (Screen Bottom)
+   ========================================================================== */
+#taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 28px;
+    background-color: var(--win-face);
+    border-top: 1px solid var(--win-highlight);
+    box-shadow: inset 0 1px 0 var(--win-light-shadow);
+    display: flex;
+    align-items: center;
+    padding: 2px 3px;
+    gap: 4px;
+    z-index: 1000;
+}
+
+.start-button {
+    height: 22px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    font-weight: bold;
+}
+
+.start-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.taskbar-tasks {
+    flex: 1;
+    display: flex;
+    gap: 3px;
+}
+
+.taskbar-item {
+    height: 22px;
+    min-width: 140px;
+    max-width: 180px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 6px;
+    font-weight: bold;
+    text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.system-tray {
+    height: 22px;
+    padding: 2px 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+    font-size: 11px;
+}
+
+/* Disclaimer text */
+.disclaimer-note {
+    margin-top: 8px;
+    font-size: 10px;
+    color: #404040;
+    font-style: italic;
+}

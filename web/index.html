@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PortHole 98</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Main Application Window -->
+    <div id="main-window" class="bevel-raised">
+        <!-- Title Bar -->
+        <div class="title-bar" id="window-title-bar">
+            <div class="title-bar-text">
+                <svg class="title-bar-icon" viewBox="0 0 16 16">
+                    <rect width="16" height="16" fill="#000080"/>
+                    <rect x="2" y="2" width="12" height="9" fill="#008080"/>
+                    <rect x="3" y="3" width="10" height="7" fill="#ffffff"/>
+                    <rect x="5" y="5" width="2" height="2" fill="#000000"/>
+                    <rect x="9" y="5" width="2" height="2" fill="#000000"/>
+                    <rect x="5" y="12" width="6" height="2" fill="#c0c0c0"/>
+                    <rect x="3" y="14" width="10" height="1" fill="#808080"/>
+                </svg>
+                <span>PortHole 98 — Network Diagnostic System</span>
+            </div>
+            <div class="title-bar-controls">
+                <button class="title-button" id="btn-minimize" title="Minimize">_</button>
+                <button class="title-button" id="btn-maximize" title="Maximize">&#9633;</button>
+                <button class="title-button" id="btn-close" title="Close">&#10005;</button>
+            </div>
+        </div>
+
+        <!-- Menu Bar -->
+        <div class="menu-bar">
+            <div class="menu-item" id="menu-file">
+                File
+                <div class="dropdown-menu bevel-raised">
+                    <div class="dropdown-entry" id="menu-run-all">Run All Checks</div>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-entry" id="menu-exit">Exit</div>
+                </div>
+            </div>
+            <div class="menu-item" id="menu-view">
+                View
+                <div class="dropdown-menu bevel-raised">
+                    <div class="dropdown-entry" id="menu-refresh">Refresh Network Info</div>
+                </div>
+            </div>
+            <div class="menu-item" id="menu-help">
+                Help
+                <div class="dropdown-menu bevel-raised">
+                    <div class="dropdown-entry" id="menu-about">About PortHole 98...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Window Body -->
+        <div class="window-body">
+            <div class="tabs-container">
+                <!-- Tab Navigation Headers -->
+                <div class="tabs-nav">
+                    <button class="tab-btn active" data-tab="tab-network">Network</button>
+                    <button class="tab-btn" data-tab="tab-local">Local Scan</button>
+                    <button class="tab-btn" data-tab="tab-public">Public Check</button>
+                </div>
+
+                <!-- Tab 1: Network Information -->
+                <div class="tab-panel active" id="tab-network">
+                    <fieldset class="group-box">
+                        <legend>Internet Protocol Addressing</legend>
+                        <div class="form-row">
+                            <label for="txt-public-ipv4">Public IPv4:</label>
+                            <input type="text" id="txt-public-ipv4" readonly style="width: 220px;" value="Discovering...">
+                            <span id="badge-ipv4" class="indicator-tag tag-gray">Checking...</span>
+                        </div>
+                        <div class="form-row">
+                            <label for="txt-public-ipv6">Public IPv6:</label>
+                            <input type="text" id="txt-public-ipv6" readonly style="width: 280px;" value="Checking IPv6...">
+                            <span id="badge-ipv6" class="indicator-tag tag-gray">Checking...</span>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="group-box">
+                        <legend>Router WAN & Carrier-Grade NAT (CGNAT)</legend>
+                        <div class="form-row">
+                            <label for="txt-router-wan">Router WAN IP:</label>
+                            <input type="text" id="txt-router-wan" style="width: 220px;" placeholder="UPnP or manual entry">
+                            <button class="bevel-button" id="btn-apply-wan" title="Apply manual WAN IP override">Apply</button>
+                            <span id="wan-src-label" style="font-size: 10px; color: #555;">(UPnP IGD)</span>
+                        </div>
+                        <div class="form-row" style="margin-top: 10px;">
+                            <label>CGNAT Detected:</label>
+                            <span id="badge-cgnat" class="indicator-tag tag-gray">Checking...</span>
+                        </div>
+                        <div class="form-row" style="align-items: flex-start; margin-top: 6px;">
+                            <label for="txt-cgnat-reason">Determination:</label>
+                            <input type="text" id="txt-cgnat-reason" readonly style="flex: 1;" value="...">
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="group-box">
+                        <legend>Local Adapter</legend>
+                        <div class="form-row">
+                            <label for="txt-local-subnet">Detected Subnet:</label>
+                            <input type="text" id="txt-local-subnet" readonly style="width: 220px;" value="Detecting...">
+                            <button class="bevel-button" id="btn-refresh-net">Refresh Adapter</button>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- Tab 2: Local Scan -->
+                <div class="tab-panel" id="tab-local">
+                    <fieldset class="group-box">
+                        <legend>Scan Configuration</legend>
+                        <div class="form-row">
+                            <label for="txt-scan-subnet">Target Subnet (/24):</label>
+                            <input type="text" id="txt-scan-subnet" style="width: 180px;" placeholder="192.168.1.0/24">
+                            <label for="sel-scan-ports" style="min-width: 50px; margin-left: 10px;">Ports:</label>
+                            <select id="sel-scan-ports" style="width: 140px;">
+                                <option value="common">Common (21 ports)</option>
+                                <option value="top1024">Top 1024 (1-1024)</option>
+                            </select>
+                            <button class="bevel-button" id="btn-start-local-scan" style="margin-left: 10px; font-weight: bold;">Scan</button>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="local-progress-fill"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="group-box" style="margin-bottom: 0;">
+                        <legend>Discovered Devices & Open Ports</legend>
+                        <div class="list-view-container">
+                            <table class="list-view" id="table-local-results">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 140px;">IP Address</th>
+                                        <th style="width: 200px;">Hostname</th>
+                                        <th>Open Ports (Service)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; color: #808080; padding: 20px;">Ready. Click 'Scan' to discover local devices.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="disclaimer-note">
+                            Note: Only scan networks you own or have permission to test.
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- Tab 3: Public Check -->
+                <div class="tab-panel" id="tab-public">
+                    <fieldset class="group-box">
+                        <legend>Public Port & Multi-Continent Latency Test</legend>
+                        <div class="form-row">
+                            <label for="txt-check-port">Target Port:</label>
+                            <input type="number" id="txt-check-port" min="1" max="65535" value="80" style="width: 80px;">
+                            <label for="sel-check-runs" style="min-width: 40px; margin-left: 10px;">Runs:</label>
+                            <select id="sel-check-runs" style="width: 70px;">
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3" selected>3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                            <button class="bevel-button" id="btn-start-public-check" style="margin-left: 10px; font-weight: bold;">Check</button>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="progress-bar-container">
+                            <div class="progress-bar-fill" id="public-progress-fill"></div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="group-box" style="margin-bottom: 0;">
+                        <legend>Global Node Latency & Reachability Results</legend>
+                        <div class="list-view-container">
+                            <table class="list-view" id="table-public-results">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="location">Location &#9650;</th>
+                                        <th data-sort="region">Region</th>
+                                        <th data-sort="status">Status</th>
+                                        <th data-sort="median">Median ms</th>
+                                        <th data-sort="min">Min</th>
+                                        <th data-sort="max">Max</th>
+                                        <th data-sort="failed">Failed</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="7" style="text-align: center; color: #808080; padding: 20px;">Ready. Click 'Check' to test global connectivity.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="font-size: 10px; color: #555; margin-top: 5px;">
+                            Tested from 5 continents via check-host.net nodes. Results cached for 45 seconds. Click column headers to sort.
+                        </div>
+                    </fieldset>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-panel flex" id="status-panel-main">Ready</div>
+            <div class="status-panel" id="status-panel-ip" style="width: 140px;">IP: Checking...</div>
+            <div class="status-panel" id="status-panel-nodes" style="width: 110px;">Nodes: 5/5</div>
+        </div>
+    </div>
+
+    <!-- Classic Windows Taskbar -->
+    <div id="taskbar">
+        <button class="bevel-button start-button" id="start-btn">
+            <svg class="start-icon" viewBox="0 0 16 16">
+                <!-- Windows 95 4-color flag -->
+                <rect x="2" y="2" width="5" height="5" fill="#f25022"/>
+                <rect x="8" y="2" width="5" height="5" fill="#7fba00"/>
+                <rect x="2" y="8" width="5" height="5" fill="#00a4ef"/>
+                <rect x="8" y="8" width="5" height="5" fill="#ffb900"/>
+            </svg>
+            <span>Start</span>
+        </button>
+        <div class="taskbar-tasks">
+            <button class="bevel-button active taskbar-item" id="taskbar-app">
+                <svg width="12" height="12" viewBox="0 0 16 16" style="vertical-align: middle;">
+                    <rect width="16" height="16" fill="#000080"/>
+                    <rect x="2" y="2" width="12" height="9" fill="#008080"/>
+                    <rect x="3" y="3" width="10" height="7" fill="#ffffff"/>
+                </svg>
+                <span>PortHole 98</span>
+            </button>
+        </div>
+        <div class="bevel-sunken system-tray">
+            <span id="tray-clock">12:00 PM</span>
+        </div>
+    </div>
+
+    <!-- Start Menu Popup -->
+    <div id="start-menu" class="bevel-raised" style="display: none; position: fixed; bottom: 28px; left: 2px; width: 170px; background: #c0c0c0; z-index: 1005;">
+        <div style="background: #000080; color: #fff; padding: 4px 8px; font-weight: bold; letter-spacing: 1px;">
+            PortHole 98
+        </div>
+        <div class="dropdown-entry" id="start-menu-run-all" style="padding: 6px 12px;">Run All Checks</div>
+        <div class="dropdown-entry" id="start-menu-refresh" style="padding: 6px 12px;">Refresh Network</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-entry" id="start-menu-about" style="padding: 6px 12px;">About...</div>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown-entry" id="start-menu-exit" style="padding: 6px 12px;">Exit</div>
+    </div>
+
+    <!-- Modal Dialog: Alert / Notice -->
+    <div class="modal-overlay" id="modal-dialog">
+        <div class="modal-window bevel-raised" id="modal-box">
+            <div class="title-bar" style="cursor: default;">
+                <div class="title-bar-text" id="modal-title">PortHole 98</div>
+                <div class="title-bar-controls">
+                    <button class="title-button" id="modal-btn-x">&#10005;</button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="modal-icon" id="modal-icon-container">
+                    <!-- Dynamic modal icon -->
+                </div>
+                <div class="modal-content" id="modal-message">
+                    Message content goes here.
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="bevel-button" id="modal-btn-ok" style="min-width: 75px;">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
