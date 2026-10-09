@@ -53,8 +53,22 @@ async def get_network_info(
 ) -> NetworkInfoResponse:
     """
     Retrieve public IPv4, IPv6, router WAN IP, local /24 subnet, and CGNAT classification.
+    Each sub-task has its own independent timeout to prevent any single slow lookup from
+    blocking the entire response.
     """
-    async def _fetch_wan() -> Optional[str]:
+    async def _safe_ipv4() -> Optional[str]:
+        try:
+            return await asyncio.wait_for(get_public_ipv4(), timeout=2.0)
+        except Exception:
+            return None
+
+    async def _safe_ipv6() -> Optional[str]:
+        try:
+            return await asyncio.wait_for(get_public_ipv6(), timeout=1.5)
+        except Exception:
+            return None
+
+    async def _safe_wan() -> Optional[str]:
         if wan_ip and wan_ip.strip():
             return wan_ip.strip()
         try:
@@ -62,17 +76,9 @@ async def get_network_info(
         except Exception:
             return None
 
-    try:
-        ipv4_task = asyncio.create_task(get_public_ipv4())
-        ipv6_task = asyncio.create_task(get_public_ipv6())
-        wan_task = asyncio.create_task(_fetch_wan())
-
-        public_ipv4, public_ipv6, resolved_wan_ip = await asyncio.wait_for(
-            asyncio.gather(ipv4_task, ipv6_task, wan_task),
-            timeout=2.5
-        )
-    except Exception:
-        public_ipv4, public_ipv6, resolved_wan_ip = None, None, (wan_ip.strip() if wan_ip else None)
+    public_ipv4, public_ipv6, resolved_wan_ip = await asyncio.gather(
+        _safe_ipv4(), _safe_ipv6(), _safe_wan()
+    )
 
     local_subnet = detect_local_subnet()
     cgnat_detected, reason = classify_cgnat(public_ipv4, resolved_wan_ip)

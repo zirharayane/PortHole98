@@ -17,6 +17,30 @@ if sys.stderr is None:
 import uvicorn
 from app.main import app
 
+# Inline loading page shown instantly while the backend boots
+_LOADING_HTML = """
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>PortHole 98</title>
+<style>
+  body { margin:0; background:#008080; display:flex; align-items:center;
+         justify-content:center; height:100vh; font-family:"MS Sans Serif",Tahoma,Arial,sans-serif; }
+  .box { background:#c0c0c0; padding:24px 36px; text-align:center;
+         box-shadow: inset -1px -1px #0a0a0a, inset 1px 1px #fff,
+                     inset -2px -2px grey, inset 2px 2px #dfdfdf; }
+  .title { background:linear-gradient(90deg,#000080,#1084d0); color:#fff;
+           font-weight:bold; padding:3px 6px; margin:-24px -36px 16px; }
+  .dots::after { content:''; animation: dots 1.5s steps(4,end) infinite; }
+  @keyframes dots { 0%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+  p { margin:8px 0; font-size:12px; color:#000; }
+</style></head>
+<body><div class="box">
+  <div class="title">PortHole 98</div>
+  <p>Starting server<span class="dots"></span></p>
+  <p style="font-size:10px;color:#555;">Please wait while the backend initializes.</p>
+</div></body></html>
+"""
+
 
 def get_free_port() -> int:
     """Find a free ephemeral TCP port on 127.0.0.1."""
@@ -64,18 +88,15 @@ class UvicornServerThread(threading.Thread):
         self.server.should_exit = True
 
 
-def wait_for_server(port: int, max_attempts: int = 60, delay: float = 0.1) -> bool:
-    """Probe the server until it responds with HTTP 200."""
-    url = f"http://127.0.0.1:{port}/"
-    for _ in range(max_attempts):
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": "PortHole98-Probe"})
-            with urllib.request.urlopen(req, timeout=1.5) as resp:
-                if resp.status == 200:
-                    return True
-        except Exception:
-            time.sleep(delay)
-    return False
+def _probe_server(port: int, timeout: float = 1.0) -> bool:
+    """Single non-blocking probe to check if the server is alive."""
+    try:
+        url = f"http://127.0.0.1:{port}/"
+        req = urllib.request.Request(url, headers={"User-Agent": "PortHole98-Probe"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return resp.status == 200
+    except Exception:
+        return False
 
 
 class DesktopAPI:
@@ -119,29 +140,42 @@ def main() -> None:
     # 2. Select a free random port on loopback only
     port = get_free_port()
     host = "127.0.0.1"
+    target_url = f"http://{host}:{port}/"
 
     # 3. Start uvicorn server in background thread
     server_thread = UvicornServerThread(host=host, port=port)
     server_thread.start()
 
-    # 4. Wait for server to respond
-    if not wait_for_server(port=port):
-        print("[ERROR] PortHole 98 background server failed to start.", file=sys.stderr)
-        server_thread.stop()
-        sys.exit(1)
-
-    # 5. Handle shutdown callback when window closes
+    # 4. Handle shutdown callback when window closes
     def on_window_closed() -> None:
         server_thread.stop()
 
-    # 6. Initialize bridge API
+    # 5. Initialize bridge API
     api = DesktopAPI()
 
-    # 7. Create native frameless pywebview window
+    # 6. Background poller: once server is up, navigate the window to the real URL
+    def poll_and_navigate() -> None:
+        """Poll server readiness in a background thread, then navigate window."""
+        for _ in range(120):  # up to 12 seconds
+            if _probe_server(port, timeout=1.0):
+                if api.window:
+                    api.window.load_url(target_url)
+                return
+            time.sleep(0.1)
+        # Server never came up — show error in the window
+        if api.window:
+            api.window.load_html(
+                '<html><body style="background:#c0c0c0;font-family:Tahoma;padding:40px;">'
+                '<h3 style="color:red;">Server failed to start.</h3>'
+                '<p>The PortHole 98 backend did not respond after 12 seconds.</p>'
+                '</body></html>'
+            )
+
+    # 7. Create native frameless pywebview window with loading page (no blocking wait)
     try:
         window = webview.create_window(
             title="PortHole 98",
-            url=f"http://{host}:{port}/",
+            html=_LOADING_HTML,
             width=760,
             height=580,
             min_size=(640, 480),
@@ -150,7 +184,13 @@ def main() -> None:
         )
         api.window = window
         window.events.closed += on_window_closed
-        webview.start(gui="edgechromium")
+
+        # Start the background poller after webview starts
+        def on_webview_started() -> None:
+            t = threading.Thread(target=poll_and_navigate, daemon=True)
+            t.start()
+
+        webview.start(func=on_webview_started, gui="edgechromium")
     except Exception as exc:
         err_str = str(exc).lower()
         if "frameless" in err_str:
@@ -159,7 +199,7 @@ def main() -> None:
             try:
                 window = webview.create_window(
                     title="PortHole 98",
-                    url=f"http://{host}:{port}/",
+                    html=_LOADING_HTML,
                     width=760,
                     height=580,
                     min_size=(640, 480),
@@ -168,7 +208,7 @@ def main() -> None:
                 )
                 api.window = window
                 window.events.closed += on_window_closed
-                webview.start(gui="edgechromium")
+                webview.start(func=on_webview_started, gui="edgechromium")
             except Exception as exc_fallback:
                 print(f"[ERROR] Native window fallback failed: {exc_fallback}", file=sys.stderr)
         elif "webview2" in err_str or "edgechromium" in err_str or "activex" in err_str:

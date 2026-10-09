@@ -617,10 +617,28 @@
     elements.btnStartPublicCheck.addEventListener("click", startPublicCheck);
 
     /* ==========================================================================
-       Initial Bootstrapping
+       Initial Bootstrapping (with retry for server cold-start)
        ========================================================================== */
+    async function bootstrapWithRetry(maxRetries = 5, delayMs = 800) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                await loadNetworkInfo(null, true);
+                return; // success
+            } catch {
+                if (attempt < maxRetries) {
+                    await new Promise(r => setTimeout(r, delayMs));
+                }
+            }
+        }
+        // All retries exhausted — show offline state silently
+        elements.txtPublicIpv4.value = "Unavailable";
+        elements.badgeIpv4.textContent = "OFFLINE";
+        elements.badgeIpv4.className = "indicator-tag tag-gray";
+        elements.statusMain.textContent = "Ready";
+    }
+
     window.addEventListener("DOMContentLoaded", () => {
-        loadNetworkInfo(null, true);
+        bootstrapWithRetry();
     });
 
 })();
