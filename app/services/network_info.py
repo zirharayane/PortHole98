@@ -59,7 +59,7 @@ async def get_public_ipv4(client: Optional[httpx.AsyncClient] = None, force_refr
 
     should_close = False
     if client is None:
-        client = httpx.AsyncClient(timeout=5.0)
+        client = httpx.AsyncClient(timeout=2.5)
         should_close = True
 
     try:
@@ -96,7 +96,7 @@ async def get_public_ipv6(client: Optional[httpx.AsyncClient] = None) -> Optiona
     """Fetch public IPv6 from api64.ipify.org; returns None if unavailable or IPv4-only."""
     should_close = False
     if client is None:
-        client = httpx.AsyncClient(timeout=4.0)
+        client = httpx.AsyncClient(timeout=1.5)
         should_close = True
 
     try:

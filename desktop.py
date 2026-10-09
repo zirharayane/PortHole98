@@ -22,11 +22,9 @@ def show_missing_webview2_dialog() -> None:
     """Show a native message box or terminal message if WebView2 runtime is missing."""
     title = "PortHole 98 — Missing WebView2 Runtime"
     msg = (
-        "Microsoft Edge WebView2 runtime is required to run PortHole 98 in native window mode.\n\n"
+        "Microsoft Edge WebView2 runtime is required to run PortHole 98.\n\n"
         "Please download and install the WebView2 Evergreen Bootstrapper from:\n"
-        "https://developer.microsoft.com/en-us/microsoft-edge/webview2/\n\n"
-        "Alternatively, you can run PortHole 98 in your standard browser via:\n"
-        "uvicorn app.main:app --reload"
+        "https://developer.microsoft.com/en-us/microsoft-edge/webview2/"
     )
     try:
         import ctypes
@@ -137,9 +135,9 @@ def main() -> None:
         window = webview.create_window(
             title="PortHole 98",
             url=f"http://{host}:{port}/",
-            width=900,
-            height=680,
-            min_size=(640, 480),
+            width=740,
+            height=520,
+            min_size=(620, 440),
             frameless=True,
             js_api=api,
         )
@@ -155,9 +153,9 @@ def main() -> None:
                 window = webview.create_window(
                     title="PortHole 98",
                     url=f"http://{host}:{port}/",
-                    width=900,
-                    height=680,
-                    min_size=(640, 480),
+                    width=740,
+                    height=520,
+                    min_size=(620, 440),
                     frameless=False,
                     js_api=api,
                 )

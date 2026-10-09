@@ -15,10 +15,6 @@
 [![Download PortHole 98](https://img.shields.io/badge/Download-PortHole98--Setup.exe-008080?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/zirharayane/PortHole98/releases)
 
 **Made by Rayane Zirha · RZ™**
-
-<!-- Replace with a real screenshot or a short GIF of the app -->
-<img src="docs/screenshot.png" alt="PortHole 98 screenshot" width="720">
-
 </div>
 
 ---
@@ -52,8 +48,7 @@ It started as a real problem: friends lagging out of a home-hosted Minecraft ser
 | **Network tab** | Public IPv4/IPv6, router WAN IP (UPnP, or enter it manually), CGNAT verdict with an explanation |
 | **Local Scan tab** | Async TCP scanner for your own subnet, hostname lookup, service names, common or top-1024 port profiles |
 | **Public Check tab** | Latency from 5 regions via [check-host.net](https://check-host.net), repeated runs, median / min / max / failed counts, sortable table |
-| **Desktop app** | Runs in its own native window and packages into a single `PortHole98.exe` |
-| **Web mode** | Same app in your browser for development |
+| **Desktop app** | Runs in its own native window and packages into a single standalone `PortHole98.exe` |
 | **Safety built in** | Private-range scans only, public checks only ever test *your own* IP, rate limits, nothing saved to disk |
 
 ---
@@ -68,17 +63,10 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-**Run it as a desktop app**
+**Run the desktop application**
 
 ```bash
-python desktop.py
-```
-
-**Run it in the browser (development)**
-
-```bash
-uvicorn app.main:app --reload
-# open http://127.0.0.1:8000
+.venv\Scripts\python desktop.py
 ```
 
 **Build the installer yourself**

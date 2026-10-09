@@ -54,15 +54,21 @@ async def get_network_info(
     """
     Retrieve public IPv4, IPv6, router WAN IP, local /24 subnet, and CGNAT classification.
     """
+    async def _fetch_wan() -> Optional[str]:
+        if wan_ip and wan_ip.strip():
+            return wan_ip.strip()
+        try:
+            return await asyncio.wait_for(asyncio.to_thread(get_router_wan_ip_upnp), timeout=1.5)
+        except Exception:
+            return None
+
     ipv4_task = asyncio.create_task(get_public_ipv4())
     ipv6_task = asyncio.create_task(get_public_ipv6())
-    public_ipv4, public_ipv6 = await asyncio.gather(ipv4_task, ipv6_task)
+    wan_task = asyncio.create_task(_fetch_wan())
 
-    resolved_wan_ip = None
-    if wan_ip and wan_ip.strip():
-        resolved_wan_ip = wan_ip.strip()
-    else:
-        resolved_wan_ip = await asyncio.to_thread(get_router_wan_ip_upnp)
+    public_ipv4, public_ipv6, resolved_wan_ip = await asyncio.gather(
+        ipv4_task, ipv6_task, wan_task
+    )
 
     local_subnet = detect_local_subnet()
     cgnat_detected, reason = classify_cgnat(public_ipv4, resolved_wan_ip)

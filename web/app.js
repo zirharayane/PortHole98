@@ -36,6 +36,9 @@
         txtPublicIpv6: document.getElementById("txt-public-ipv6"),
         txtRouterWan: document.getElementById("txt-router-wan"),
         btnApplyWan: document.getElementById("btn-apply-wan"),
+        btnCopyIpv4: document.getElementById("btn-copy-ipv4"),
+        btnGotoLocalScan: document.getElementById("btn-goto-local-scan"),
+        btnGotoPublicCheck: document.getElementById("btn-goto-public-check"),
         wanSrcLabel: document.getElementById("wan-src-label"),
         badgeIpv4: document.getElementById("badge-ipv4"),
         badgeIpv6: document.getElementById("badge-ipv6"),
@@ -111,7 +114,7 @@
     });
 
     /* ==========================================================================
-       Native Window Controls (pywebview Frameless Bridge & Browser Fallback)
+       Native Window Controls (pywebview Frameless Bridge)
        ========================================================================== */
     function isPywebviewActive() {
         return window.pywebview && window.pywebview.api;
@@ -120,33 +123,18 @@
     function minimizeWindow() {
         if (isPywebviewActive()) {
             window.pywebview.api.minimize();
-        } else {
-            showModal("Minimize", "<p>Minimize is only available in native desktop app mode.</p>", "info");
         }
     }
 
     function toggleMaximizeWindow() {
         if (isPywebviewActive()) {
             window.pywebview.api.toggle_maximize();
-        } else {
-            // Browser fullscreen fallback
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            } else {
-                document.exitFullscreen().catch(() => {});
-            }
         }
     }
 
     function closeWindow() {
         if (isPywebviewActive()) {
             window.pywebview.api.close();
-        } else {
-            showModal(
-                "Exit PortHole 98",
-                "<p>To close PortHole 98 in browser mode, please close your browser tab or terminate the process in your terminal.</p>",
-                "info"
-            );
         }
     }
 
@@ -222,24 +210,54 @@
     /* ==========================================================================
        Tab Navigation
        ========================================================================== */
+    function activateTab(targetId) {
+        document.querySelectorAll(".tab-btn").forEach(b => {
+            b.classList.toggle("active", b.getAttribute("data-tab") === targetId);
+        });
+        document.querySelectorAll(".tab-panel").forEach(p => {
+            p.classList.toggle("active", p.id === targetId);
+        });
+    }
+
     document.querySelectorAll(".tab-btn").forEach(btn => {
         btn.addEventListener("click", () => {
-            const targetId = btn.getAttribute("data-tab");
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
-
-            btn.classList.add("active");
-            const panel = document.getElementById(targetId);
-            if (panel) panel.classList.add("active");
+            activateTab(btn.getAttribute("data-tab"));
         });
     });
+
+    if (elements.btnGotoLocalScan) {
+        elements.btnGotoLocalScan.addEventListener("click", () => activateTab("tab-local"));
+    }
+    if (elements.btnGotoPublicCheck) {
+        elements.btnGotoPublicCheck.addEventListener("click", () => activateTab("tab-public"));
+    }
+
+    if (elements.btnCopyIpv4) {
+        elements.btnCopyIpv4.addEventListener("click", async () => {
+            const ip = elements.txtPublicIpv4.value;
+            if (ip && ip !== "Discovering..." && ip !== "Unavailable") {
+                try {
+                    await navigator.clipboard.writeText(ip);
+                    elements.statusMain.textContent = `Copied ${ip} to clipboard.`;
+                    setTimeout(() => { elements.statusMain.textContent = "Ready"; }, 2500);
+                } catch {
+                    // Fallback
+                    elements.txtPublicIpv4.select();
+                    document.execCommand("copy");
+                    elements.statusMain.textContent = `Copied ${ip} to clipboard.`;
+                }
+            }
+        });
+    }
 
     /* ==========================================================================
        API Communications — Tab 1: Network Information
        ========================================================================== */
     async function loadNetworkInfo(manualWanIp = null, isInitialLoad = false) {
         elements.statusMain.textContent = "Querying network configuration...";
-        document.body.classList.add("busy");
+        if (!isInitialLoad) {
+            document.body.classList.add("busy");
+        }
 
         try {
             let url = "/api/network";
@@ -326,7 +344,9 @@
             elements.statusMain.textContent = "Ready";
             showModal("Network Error", `<p>Failed to query network configuration:</p><p style="color: red; margin-top: 4px;">${err.message}</p>`, "error");
         } finally {
-            document.body.classList.remove("busy");
+            if (!isInitialLoad) {
+                document.body.classList.remove("busy");
+            }
         }
     }
 

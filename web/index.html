@@ -71,12 +71,13 @@
                         <legend>Internet Protocol Addressing</legend>
                         <div class="form-row">
                             <label for="txt-public-ipv4">Public IPv4:</label>
-                            <input type="text" id="txt-public-ipv4" readonly style="width: 220px;" value="Discovering...">
+                            <input type="text" id="txt-public-ipv4" readonly style="width: 200px;" value="Discovering...">
+                            <button class="bevel-button" id="btn-copy-ipv4" title="Copy IPv4 to clipboard">Copy</button>
                             <span id="badge-ipv4" class="indicator-tag tag-gray">Checking...</span>
                         </div>
                         <div class="form-row">
                             <label for="txt-public-ipv6">Public IPv6:</label>
-                            <input type="text" id="txt-public-ipv6" readonly style="width: 280px;" value="Checking IPv6...">
+                            <input type="text" id="txt-public-ipv6" readonly style="width: 250px;" value="Checking IPv6...">
                             <span id="badge-ipv6" class="indicator-tag tag-gray">Checking...</span>
                         </div>
                     </fieldset>
@@ -85,11 +86,11 @@
                         <legend>Router WAN & Carrier-Grade NAT (CGNAT)</legend>
                         <div class="form-row">
                             <label for="txt-router-wan">Router WAN IP:</label>
-                            <input type="text" id="txt-router-wan" style="width: 220px;" placeholder="UPnP or manual entry">
+                            <input type="text" id="txt-router-wan" style="width: 200px;" placeholder="UPnP or manual entry">
                             <button class="bevel-button" id="btn-apply-wan" title="Apply manual WAN IP override">Apply</button>
                             <span id="wan-src-label" style="font-size: 10px; color: #555;">(UPnP IGD)</span>
                         </div>
-                        <div class="form-row" style="margin-top: 10px;">
+                        <div class="form-row" style="margin-top: 6px;">
                             <label>CGNAT Status:</label>
                             <span id="badge-cgnat" class="indicator-tag tag-gray">UNKNOWN</span>
                         </div>
@@ -103,8 +104,19 @@
                         <legend>Local Adapter</legend>
                         <div class="form-row">
                             <label for="txt-local-subnet">Detected Subnet:</label>
-                            <input type="text" id="txt-local-subnet" readonly style="width: 220px;" value="Detecting...">
+                            <input type="text" id="txt-local-subnet" readonly style="width: 200px;" value="Detecting...">
                             <button class="bevel-button" id="btn-refresh-net">Refresh Adapter</button>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="group-box">
+                        <legend>Quick Tools & Actions</legend>
+                        <div class="form-row" style="gap: 10px; margin-bottom: 2px;">
+                            <button class="bevel-button" id="btn-goto-local-scan" style="padding: 4px 10px;">🔍 Scan Subnet Devices...</button>
+                            <button class="bevel-button" id="btn-goto-public-check" style="padding: 4px 10px;">🌍 Test Port Reachability...</button>
+                        </div>
+                        <div style="font-size: 10px; color: #555; margin-top: 5px;">
+                            Note: If CGNAT is active, port forwarding cannot receive incoming connections from the public Internet.
                         </div>
                     </fieldset>
                 </div>
