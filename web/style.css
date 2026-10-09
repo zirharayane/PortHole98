@@ -288,7 +288,7 @@ body.busy, body.busy * {
 .tab-panel {
     display: none;
     background-color: var(--win-face);
-    padding: 10px;
+    padding: 8px 10px;
     border-top: 1px solid var(--win-highlight);
     border-left: 1px solid var(--win-highlight);
     border-right: 1px solid var(--win-dark);
@@ -309,8 +309,8 @@ body.busy, body.busy * {
 fieldset.group-box {
     border: 1px solid var(--win-shadow);
     box-shadow: 1px 1px 0 var(--win-highlight);
-    padding: 10px 12px;
-    margin-bottom: 8px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
     flex-shrink: 0;
 }
 
@@ -331,7 +331,7 @@ legend {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
 .form-row label {

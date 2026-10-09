@@ -1,11 +1,18 @@
 """Desktop application launcher for PortHole 98 using pywebview and background uvicorn."""
 
+import os
 import socket
 import sys
 import threading
 import time
 import urllib.request
 from typing import Any, Optional
+
+# In PyInstaller --windowed mode, sys.stdout and sys.stderr are None; redirect to devnull
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w")
+if sys.stderr is None:
+    sys.stderr = open(os.devnull, "w")
 
 import uvicorn
 from app.main import app
@@ -135,9 +142,9 @@ def main() -> None:
         window = webview.create_window(
             title="PortHole 98",
             url=f"http://{host}:{port}/",
-            width=740,
-            height=520,
-            min_size=(620, 440),
+            width=760,
+            height=580,
+            min_size=(640, 480),
             frameless=True,
             js_api=api,
         )
@@ -153,9 +160,9 @@ def main() -> None:
                 window = webview.create_window(
                     title="PortHole 98",
                     url=f"http://{host}:{port}/",
-                    width=740,
-                    height=520,
-                    min_size=(620, 440),
+                    width=760,
+                    height=580,
+                    min_size=(640, 480),
                     frameless=False,
                     js_api=api,
                 )

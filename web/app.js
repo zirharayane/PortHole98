@@ -259,13 +259,17 @@
             document.body.classList.add("busy");
         }
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
         try {
             let url = "/api/network";
             if (manualWanIp && manualWanIp.trim()) {
                 url += `?wan_ip=${encodeURIComponent(manualWanIp.trim())}`;
             }
 
-            const resp = await fetch(url);
+            const resp = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
             if (!resp.ok) throw new Error(`HTTP error ${resp.status}`);
             const data = await resp.json();
             state.networkInfo = data;
@@ -341,8 +345,19 @@
             }
 
         } catch (err) {
+            clearTimeout(timeoutId);
             elements.statusMain.textContent = "Ready";
-            showModal("Network Error", `<p>Failed to query network configuration:</p><p style="color: red; margin-top: 4px;">${err.message}</p>`, "error");
+            if (isInitialLoad) {
+                elements.txtPublicIpv4.value = "Unavailable";
+                elements.badgeIpv4.textContent = "OFFLINE";
+                elements.badgeIpv4.className = "indicator-tag tag-gray";
+                elements.txtPublicIpv6.value = "Unavailable";
+                elements.badgeIpv6.textContent = "NONE";
+                elements.badgeIpv6.className = "indicator-tag tag-gray";
+                elements.statusIp.textContent = "IP: Offline";
+            } else {
+                showModal("Network Error", `<p>Failed to query network configuration:</p><p style="color: red; margin-top: 4px;">${err.message}</p>`, "error");
+            }
         } finally {
             if (!isInitialLoad) {
                 document.body.classList.remove("busy");
