@@ -9,3 +9,4 @@ build/__pycache__/
 build/*.txt
 build/*.html
 *.spec
+.agents
